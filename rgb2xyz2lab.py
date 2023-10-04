@@ -8,9 +8,10 @@ def function_v(val):
     
 def function_l(val):
     if val > 0.008856:
-        return pow( val , 1/3 )
+        return pow( val , 0.33333333 )
     else:
-        return (7.787 * val) + (16 / 116)
+        #return (7.787 * val) + (16 / 116)
+        return (903.3 * val + 16) / 116
     
     
 def cvtcolor(skin_color):    
@@ -46,3 +47,10 @@ def cvtcolor(skin_color):
     l = (116 * val_y) - 16
     a = 500 * ( val_x - val_y )
     b = 200 * ( val_y - val_z )
+    
+    
+    return (l,a,b)
+
+
+
+print(cvtcolor((162, 170, 203)))

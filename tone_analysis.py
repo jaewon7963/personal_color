@@ -713,10 +713,10 @@ hsv_s_forehead = convert_color(rgb_forehead, HSVColor, through_rgb_type=sRGBColo
 # 가중치
 """
 model_tone = CatBoostClassifier()
-model_tone.load_model('./model_tone.cbm')
+model_tone.load_model('./model/model_tone.cbm')
 
 model_weather = CatBoostClassifier()
-model_weather.load_model('./model_weather.cbm')
+model_weather.load_model('./model/model_weather.cbm')
 
 s_data = {
     'b': [color_b_forehead],
