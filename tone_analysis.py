@@ -683,12 +683,15 @@ rgb_forehead = sRGBColor(r_g_forehead , g_g_forehead, b_g_cheek)
 
 color_b_chin = convert_color(rgb_chin, LabColor, through_rgb_type=sRGBColor).lab_b
 color_a_chin = convert_color(rgb_chin, LabColor, through_rgb_type=sRGBColor).lab_a
+color_l_chin = convert_color(rgb_chin, LabColor, through_rgb_type=sRGBColor).lab_l
 
 color_b_cheek = convert_color(rgb_cheek, LabColor, through_rgb_type=sRGBColor).lab_b
 color_a_cheek = convert_color(rgb_cheek, LabColor, through_rgb_type=sRGBColor).lab_a
+color_l_cheek = convert_color(rgb_cheek, LabColor, through_rgb_type=sRGBColor).lab_l
 
 color_b_forehead = convert_color(rgb_forehead, LabColor, through_rgb_type=sRGBColor).lab_b
-color_b_forehead = convert_color(rgb_forehead, LabColor, through_rgb_type=sRGBColor).lab_a
+color_a_forehead = convert_color(rgb_forehead, LabColor, through_rgb_type=sRGBColor).lab_a
+color_l_forehead = convert_color(rgb_forehead, LabColor, through_rgb_type=sRGBColor).lab_l
 
 
 hsv_h_chin = convert_color(rgb_chin, HSVColor, through_rgb_type=sRGBColor).hsv_h
@@ -730,20 +733,61 @@ s_data = {
     'h_cheek': [hsv_h_cheek]
 }
 
+m_data = {
+    'a': [color_a_forehead],
+    'a_chin': [color_a_chin],
+    'a_cheek': [color_a_cheek],
+    'l': [color_l_forehead],
+    'l_chin': [color_l_chin],
+    'l_cheek': [color_l_cheek],
+    's': [hsv_s_forehead],
+    's_chin': [hsv_s_chin],
+    's_cheek': [hsv_s_cheek],
+    'v': [hsv_v_forehead],
+    'v_chin': [hsv_v_chin],
+    'v_cheek': [hsv_v_cheek]
+}
+
+cat_mood = ''
+
 df = pd.DataFrame(s_data)
+df2 = pd.DataFrame(m_data)
 
 pool = Pool(df)
+pool2 = Pool(df2)
 
 c1 = model_tone.predict(pool)
 p1 = model_tone.predict_proba(pool)
-print("saved model : ", c1)
+print("saved model : ", c1[0])
 
 c2 = model_weather.predict(pool)
 p2 = model_weather.predict_proba(pool)
 print("savedmodel : ", c2)
 
+if c2[0][0] == 'spring':
+    model_mood = CatBoostClassifier()
+    model_mood.load_model('./model/model_spring_mood.cbm')
+    cat_mood = model_mood.predict(pool2)[0]
+elif c2[0][0] == 'summer':
+    model_mood = CatBoostClassifier()
+    model_mood.load_model('./model/model_summer_mood.cbm')
+    cat_mood = model_mood.predict(pool2)[0]
+elif c2[0][0] == 'fall':
+    model_mood = CatBoostClassifier()
+    model_mood.load_model('./model/model_fall_mood.cbm')
+    cat_mood = model_mood.predict(pool2)[0]
+else:
+    model_mood = CatBoostClassifier()
+    model_mood.load_model('./model/model_winter_mood.cbm')
+    cat_mood = model_mood.predict(pool2)[0]
+
+print("saved model :", cat_mood)
+
 #cat_tone, cat_weather = cat.predict(color_b_forehead, color_b_chin, color_b_cheek, hsv_s_forehead,hsv_s_chin, hsv_s_cheek, hsv_h_forehead, hsv_h_chin, hsv_h_cheek)
 
+
+
+"""
 f_w = color_b_forehead * 0.5
 chin_w = color_b_chin * 0.7
 cheek_w = color_b_cheek * 0.8
@@ -755,9 +799,8 @@ cheek_s_w = hsv_s_cheek * 0.8
 s_sum = f_s_w + chin_s_w + cheek_s_w
 
 
-
 """
-추출한 색상으로 피부톤 진단하기 - 진행 중 ..
+# 추출한 색상으로 피부톤 진단하기 - 진행 중 .. (폐기할듯)
 """
 #if color_b <= 18.5:
 if w_sum <= 19.0:
@@ -808,9 +851,15 @@ else:
             
 print(final_tone)
 #print(cat_tone, cat_weather)
+"""
+
+
+
 
 end_time = time.time()
 elapsed_time = end_time - start_time
+
+
 
 """
 하한 - 상한 사이의 값들은 백색, 나머지는 흑색. - 사용안함
