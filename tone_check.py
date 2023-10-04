@@ -7,20 +7,26 @@ import pandas as pd
 import cat
 from colormath.color_objects import XYZColor, sRGBColor, LabColor, HSVColor
 from colormath.color_conversions import convert_color
-
+from catboost import CatBoostClassifier, Pool
 
 import rgb2hsv as r2h
 import rgb2xyz2lab as r2l
 
+model_tone = CatBoostClassifier()
+model_tone.load_model('./model/model_tone2.cbm')
+
+model_weather = CatBoostClassifier()
+model_weather.load_model('./model/model_weather2.cbm')
+
 gt_list = ['spring_warm_bright' , 'spring_warm_light', 'autumn_warm_mute', 'autumn_warm_deep',
            'summer_cool_mute', 'summer_cool_light', 'winter_cool_bright', 'winter_cool_deep']
 
-gt = gt_list[0]
+gt = gt_list[1]
 
 
 #input_path = './result/' + gt  + "12"
 #input_path = './result/warm2'
-name = 'warm_s_result_w'
+name = 'spring_warm_light'
 input_path = './result/forehead/' + name
 tone_list = ["봄 웜 브라이트" , "봄 웜 라이트", "여름 쿨 라이트", "여름 쿨 뮤트", "가을 웜 뮤트", "가을 웜 딥", "겨울 쿨 딥", "겨울 쿨 브라이트"]
 
@@ -85,6 +91,7 @@ mood_correct = 0
 
 cat_tone_correct = 0
 cat_weather_correct = 0
+cat_mood_correct = 0
 
 
 num = 0
@@ -143,19 +150,19 @@ for file in os.listdir(input_path):
         
 
         if not os.path.exists(chin_dir + "/" + file):
-            #try:
-                #os.remove(input_path + "/" + file)
-                #os.remove(cheek_dir + "/" + file)
-            #except Exception as chin:
-                #continue
+            try:
+                os.remove(input_path + "/" + file)
+                os.remove(cheek_dir + "/" + file)
+            except Exception as chin:
+                continue
             continue
         
         if not os.path.exists(cheek_dir + "/" + file):
-            #try:
-                #os.remove(input_path + "/" + file)
-                #os.remove(chin_dir + "/" + file)
-            #except Exception as cheek:
-                #continue
+            try:
+                os.remove(input_path + "/" + file)
+                os.remove(chin_dir + "/" + file)
+            except Exception as cheek:
+                continue
             continue
         
         
@@ -365,13 +372,69 @@ for file in os.listdir(input_path):
         #"""
         cat_tone = ''
         cat_weather = ''
+        cat_mood = ''
         
-        cat_tone, cat_weather = cat.predict(color_b, color_b_chin, color_b_cheek, \
-                                            hsv_s, hsv_s_chin, hsv_s_cheek,\
-                                                hsv_h, hsv_h_chin, hsv_h_cheek)
+        s_data = {
+            'b': [color_b],
+            'b_chin': [color_b_chin],
+            'b_cheek': [color_b_cheek],
+            's': [hsv_s],
+            's_chin': [hsv_s_chin],
+            's_cheek': [hsv_s_cheek],
+            'h': [hsv_h],
+            'h_chin': [hsv_h_chin],
+            'h_cheek': [hsv_h_cheek]
+        }
+        
+        m_data = {
+            'a': [color_a],
+            'a_chin': [color_a_chin],
+            'a_cheek': [color_a_cheek],
+            'l': [color_l],
+            'l_chin': [color_l_chin],
+            'l_cheek': [color_l_cheek],
+            's': [hsv_s],
+            's_chin': [hsv_s_chin],
+            's_cheek': [hsv_s_cheek],
+            'v': [hsv_v],
+            'v_chin': [hsv_v_chin],
+            'v_cheek': [hsv_v_cheek]
+        }
+
+        df = pd.DataFrame(s_data)
+        pool = Pool(df)
+        
+        df2 = pd.DataFrame(m_data)
+        pool2 = Pool(df2)
+        
+        c1 = model_tone.predict(pool)
+        c2 = model_weather.predict(pool)
+        
+        cat_tone = c1[0]
+        cat_weather = c2[0][0]
+        
+        if cat_weather == 'spring':
+            model_mood = CatBoostClassifier()
+            model_mood.load_model('./model/model_spring_mood.cbm')
+            cat_mood = model_mood.predict(pool2)
+        elif cat_weather == 'summer':
+            model_mood = CatBoostClassifier()
+            model_mood.load_model('./model/model_summer_mood.cbm')
+            cat_mood = model_mood.predict(pool2)
+        elif cat_weather == 'fall':
+            model_mood = CatBoostClassifier()
+            model_mood.load_model('./model/model_fall_mood.cbm')
+            cat_mood = model_mood.predict(pool2)
+        else:
+            model_mood = CatBoostClassifier()
+            model_mood.load_model('./model/model_winter_mood.cbm')
+            cat_mood = model_mood.predict(pool2)
+        
+        
             
         ct = ''
         cw = ''
+        cm = ''
         
         if cat_tone == 'warm':
             ct = '웜'
@@ -387,11 +450,44 @@ for file in os.listdir(input_path):
         elif cat_weather == 'winter':
             cw = '겨울'
             
+        if cat_mood == 'bright':
+            cm = '브라이트'
+        elif cat_mood == 'light':
+            cm = '라이트'
+        elif cat_mood == 'deep':
+            cm = '딥'
+        elif cat_mood == 'mute':
+            cm = '뮤트'
+            
         if ct in goal:
             cat_tone_correct += 1
             
         if cw in goal:
             cat_weather_correct += 1
+            
+        if cm in goal:
+            cat_mood_correct += 1
+            
+        """
+        if ct not in goal:
+            try:
+                os.remove(input_path + "/" + file)
+                os.remove(cheek_dir + "/" + file)
+                os.remove(chin_dir + "/" + file)
+            except Exception as chin:
+                continue
+            continue
+        
+        if cw not in goal:
+            try:
+                os.remove(input_path + "/" + file)
+                os.remove(cheek_dir + "/" + file)
+                os.remove(chin_dir + "/" + file)
+            except Exception as chin:
+                continue
+            continue
+        """
+            
         """
         if cat_tone != tone:
             os.remove(input_path + "/" + file)
@@ -478,6 +574,8 @@ print("-----------------------------")
 print("실제 분위기 = ", mood)
 print('일치한 분위기 = ', mood_correct)
 print((mood_correct / file_count ) * 100)
+print('cat 일치한 분위기 = ', cat_mood_correct)
+print((cat_mood_correct / file_count ) * 100)
 print("-----------------------------")
 print(" 일치한 개수 = ", count)
 print((count / file_count ) * 100)
@@ -490,8 +588,9 @@ data = {'tone': ['1'] * file_count,'weather': ['winter'] * file_count ,\
         's': s_list, 's_chin': s_list_chin, 's_cheek' : s_list_cheek, \
         'h': h_list, 'h_chin': h_list_chin, 'h_cheek' : h_list_cheek}
 """
+
 """
-data = {'tone': ['0'] * file_count, \
+data = {'mood': ['deep'] * file_count,\
         'b': b_list, 'b_chin': b_list_chin, 'b_cheek' : b_list_cheek, \
         'a': a_list, 'a_chin': a_list_chin, 'a_cheek' : a_list_cheek, \
         'l': l_list, 'l_chin': l_list_chin, 'l_cheek' : l_list_cheek, \
@@ -502,5 +601,6 @@ data = {'tone': ['0'] * file_count, \
 #data = {'tone': ['0'] * file_count, 'b' : b_list, 'a': a_list}
 df = pd.DataFrame(data)
 
-df.to_csv('notion_warm.csv', index=False)
+df.to_csv('winter_deep.csv', index=False)
+
 """
