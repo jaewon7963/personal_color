@@ -1,16 +1,13 @@
 import numpy as np
 import cv2 as cv
-import os
-import rgb2xyz2lab as r2l
 import rgb2hsv as r2h
 import time
 import pandas as pd
 
 from catboost import CatBoostClassifier, Pool
-from colormath.color_objects import XYZColor, sRGBColor, LabColor, HSVColor
+from colormath.color_objects import sRGBColor, LabColor, HSVColor
 from colormath.color_conversions import convert_color
 from collections import Counter
-from PIL import Image
 from sklearn.cluster import KMeans
 
 """
@@ -61,10 +58,11 @@ def extract_most_common_color(palette):
 
 count = 0
 
+"""
 input_path = './image'
-name = 'seonggyeong'
-num ='_214'
-
+name = 'kalina'
+num ='_017'
+"""
 
 """
 톤의 기본 값은 웜톤(False)
@@ -121,8 +119,8 @@ start_time = time.time()
 
 
 #img = cv.imread('./image/person/003.jpg')
-img = cv.imread(input_path + "/" + name + "/" + name + num + '.jpg')
-#img = white.white_balancing(origin_img)
+#img = cv.imread(input_path + "/" + name + "/" + name + num + '.jpg')
+img = cv.imread('./static/test.jpg')
 
 gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
@@ -614,9 +612,9 @@ color_list.clear()
 """
 
 
-
 """
-팔레트에서 선택한 색상으로 50x50 사이즈 사각형 만들기 ---------------------------------------------------------------------------
+"""
+# 팔레트에서 선택한 색상으로 50x50 사이즈 사각형 만들기 ---------------------------------------------------------------------------
 """
      
 #otsu_rec = np.ones((50, 50, 3), dtype = np.uint8) * 255 # 피부
@@ -642,22 +640,13 @@ rgb_skin_color = (skin_color[2], skin_color[1], skin_color[0])
 image = Image.new("RGB", (50, 50), rgb_skin_color)
 
 """
-팔레트에서 선택한 색상으로 50x50 사이즈 사각형 만들기 ---------------------------------------------------------------------------
+# 팔레트에서 선택한 색상으로 50x50 사이즈 사각형 만들기 ---------------------------------------------------------------------------
 """
-
-
-if r2l.cvtcolor(skin_color)[2] <= 18.5:
-    tone = True
-
+"""
 hsv_v = r2h.cvtcolor(skin_color)[2]
 hsv_s = r2h.cvtcolor(skin_color)[1]
 
-#print(hsv_v , hsv_s)
 
-########### tone_list = ["봄 웜 브라이트" , "봄 웜 라이트", "여름 쿨 라이트", "여름 쿨 뮤트", "가을 웜 뮤트", "가을 웜 딥", "겨울 쿨 딥", "겨울 쿨 브라이트"]
-
-final_tone = ""
-tone = False
 
 r_g_chin = color_scalar_chin[2] / 255
 g_g_chin = color_scalar_chin[1] / 255
@@ -762,30 +751,51 @@ print("saved model : ", c1[0])
 
 c2 = model_weather.predict(pool)
 p2 = model_weather.predict_proba(pool)
-print("savedmodel : ", c2)
+print("saved model : ", c2[0][0])
+
+if c1[0] == 'warm':
+    c1[0] = '웜'
+else:
+    c1[0] = '쿨'
+
 
 if c2[0][0] == 'spring':
+    c2[0][0] = '봄'
     model_mood = CatBoostClassifier()
     model_mood.load_model('./model/model_spring_mood.cbm')
     cat_mood = model_mood.predict(pool2)[0]
 elif c2[0][0] == 'summer':
+    c2[0][0] = '여름'
     model_mood = CatBoostClassifier()
     model_mood.load_model('./model/model_summer_mood.cbm')
     cat_mood = model_mood.predict(pool2)[0]
 elif c2[0][0] == 'fall':
+    c2[0][0] = '가을'
     model_mood = CatBoostClassifier()
     model_mood.load_model('./model/model_fall_mood.cbm')
     cat_mood = model_mood.predict(pool2)[0]
 else:
+    c2[0][0] = '겨울'
     model_mood = CatBoostClassifier()
     model_mood.load_model('./model/model_winter_mood.cbm')
     cat_mood = model_mood.predict(pool2)[0]
 
-print("saved model :", cat_mood)
+print("saved model : ", cat_mood)
 
-#cat_tone, cat_weather = cat.predict(color_b_forehead, color_b_chin, color_b_cheek, hsv_s_forehead,hsv_s_chin, hsv_s_cheek, hsv_h_forehead, hsv_h_chin, hsv_h_cheek)
+if cat_mood == 'bright':
+    cat_mood = '브라이트'
+elif cat_mood =='light':
+    cat_mood = '라이트'
+elif cat_mood == 'mute':
+    cat_mood = '뮤트'
+else:
+    cat_mood = '딥'
+    
+result = c1[0] + " " +  c2[0][0] + " " + cat_mood
+print(result)
 
-
+with open('./result/result.txt', 'w') as file:
+    file.write(result)
 
 """
 f_w = color_b_forehead * 0.5
@@ -852,13 +862,8 @@ else:
 print(final_tone)
 #print(cat_tone, cat_weather)
 """
-
-
-
-
 end_time = time.time()
 elapsed_time = end_time - start_time
-
 
 
 """
@@ -866,9 +871,9 @@ elapsed_time = end_time - start_time
 """
 #thresh_img1 = cv.inRange(gray_img, threshold, 255)
 
-
 """
-이미지 확인하기 -----------------------------------------------------------------------------------------------------------
+"""
+# 이미지 확인하기 -----------------------------------------------------------------------------------------------------------
 """
 
 combined_img = np.concatenate((crop_img, skin_otsu,rgb_hsv_skin), axis =1)
@@ -888,7 +893,7 @@ cv.imshow('combined', combined_img) ######################
 #cv.imshow('lab palette', lab_palette)
 #cv.imshow('lab skin', lab_rec)
 """
-cv.imshow('otsu palette', palette_otsu)######################
+# cv.imshow('otsu palette', palette_otsu) ######################
 """
 #cv.imshow('otsu palette lab', palette_otsu_lab)
 
@@ -929,6 +934,7 @@ cv.imshow('color', combined_color)
 #cv.imshow('pupil gray', pupil_mask)
 """
 
+"""
 cv.imshow('eye origin', cpy)
 if iris is not None:
     iris_combined = np.concatenate((iris, iris_otsu_skin), axis = 0)
@@ -945,7 +951,8 @@ if iris is not None:
     cv.imshow('iris palette', iris_palette_combined)
     cv.imshow('ycrcb' , masked_iris_ycrcb)
     cv.imshow('ycrcb + otsu', yiris_otsu_skin)
-    
+"""
+
 """
 #cv.imshow('pupil extracted', pupil_mask_bgr)
 #cv.imshow('rgb skin skin', rgb_heye_skin_skin)
@@ -957,5 +964,7 @@ cv.destroyAllWindows()
 print(f"경과 시간: {elapsed_time} 초")
 
 """
-이미지 확인하기 -----------------------------------------------------------------------------------------------------------
+#이미지 확인하기 -----------------------------------------------------------------------------------------------------------
+"""
+
 """
