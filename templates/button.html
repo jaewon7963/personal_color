@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카메라 촬영 웹 애플리케이션</title>
+</head>
+<body>
+    <h1>카메라 촬영 웹 애플리케이션</h1>
+    <button id="captureButton">사진 촬영</button>
+    <img id="capturedImage" src="" alt="Captured Image" style="display: none;">
+    
+    <script>
+        // 버튼 클릭 시 이미지 캡처를 요청하는 JavaScript 코드
+        document.getElementById('captureButton').addEventListener('click', function() {
+            fetch('/capture', { method: 'POST' })
+                .then(function(response) {
+                    if (response.ok) {
+                        return response.text();
+                    }
+                    throw new Error('캡처 요청 실패');
+                })
+                .then(function(message) {
+                    console.log(message);
+                    // 캡처된 이미지를 표시
+                    document.getElementById('capturedImage').src = '/image?' + new Date().getTime();
+                    document.getElementById('capturedImage').style.display = 'block';
+                })
+                .catch(function(error) {
+                    console.error(error);
+                });
+        });
+    </script>
+</body>
+</html>
