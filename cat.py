@@ -2,35 +2,48 @@ import numpy as np
 import pandas as pd
 from catboost import CatBoostClassifier, Pool
 
-
-
-train = pd.read_csv('./whole_new.csv')
-train_tone = train['tone']
+#train = pd.read_csv('./whole.csv')
+train = pd.read_csv('./weather_csv/warm.csv')
+#train_tone = train['tone']
 train_weather = train['weather']
 
-x = train.drop(['tone','weather'], axis = 1)
+#train_mood = train['weather']
 
-test_tone = catboost_pool = Pool(x, train_tone)
+x = train.drop(['weather', 'tone'], axis = 1)
+
+#test_tone = catboost_pool = Pool(x, train_tone)
 test_weather = catboost_pool = Pool(x, train_weather)
 
+"""
 model_tone = CatBoostClassifier(iterations=2,
                            depth=2,
                            learning_rate=1,
                            loss_function='Logloss',
                            verbose=True)
-
+"""
 model_weather = CatBoostClassifier(iterations=2,
                            depth=2,
                            learning_rate=1,
-                           loss_function='MultiClass',
+                           loss_function='Logloss',
                            verbose=True)
 
-model_tone.fit(x, train_tone)
+
+"""
+model_mood = CatBoostClassifier(iterations=2,
+                           depth=2,
+                           learning_rate=1,
+                           loss_function='Logloss',
+                           verbose=True)
+"""
+
+
+#model_tone.fit(x, train_tone)
 model_weather.fit(x, train_weather)
+#model_mood.fit(x, train_mood)
 
-model_tone.save_model('model_tone.cbm')
-model_weather.save_model('model_weather.cbm')
-
+#model_tone.save_model('model_tone.cbm')
+model_weather.save_model('./model/model_warm.cbm')
+#model_mood.save_model('model_winter_mood.cbm')
 
 """
 preds_class = model_tone.predict(x)
@@ -71,6 +84,7 @@ print("class = ", c2)
 print("proba = ", p2)
 """
 
+"""
 def predict(b_forehead, b_chin, b_cheek, s_forehead, s_chin, s_cheek, h_forehead, h_chin, h_cheek):
     
     cat_tone = ''
@@ -118,5 +132,5 @@ def predict(b_forehead, b_chin, b_cheek, s_forehead, s_chin, s_cheek, h_forehead
     
     
     return c1[0], c2[0][0]
-    
+"""
     

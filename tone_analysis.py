@@ -120,7 +120,7 @@ start_time = time.time()
 
 #img = cv.imread('./image/person/003.jpg')
 #img = cv.imread(input_path + "/" + name + "/" + name + num + '.jpg')
-img = cv.imread('./static/test.jpg')
+img = cv.imread('./static/mudo.jpg')
 
 gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
@@ -137,6 +137,10 @@ for (x,y,w,h) in faces:
     count += 1
  
 print(count)
+
+if count > 1:
+    print("얼굴 너무 많음")
+    exit()
 
 
 """

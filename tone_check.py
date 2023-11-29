@@ -15,18 +15,18 @@ import rgb2xyz2lab as r2l
 model_tone = CatBoostClassifier()
 model_tone.load_model('./model/model_tone2.cbm')
 
-model_weather = CatBoostClassifier()
-model_weather.load_model('./model/model_weather2.cbm')
+#model_weather = CatBoostClassifier()
+#model_weather.load_model('./model/model_weather2.cbm')
 
 gt_list = ['spring_warm_bright' , 'spring_warm_light', 'autumn_warm_mute', 'autumn_warm_deep',
            'summer_cool_mute', 'summer_cool_light', 'winter_cool_bright', 'winter_cool_deep']
 
-gt = gt_list[1]
+gt = gt_list[6]
 
 
 #input_path = './result/' + gt  + "12"
 #input_path = './result/warm2'
-name = 'spring_warm_light'
+name = 'winter_result_w'
 input_path = './result/forehead/' + name
 tone_list = ["봄 웜 브라이트" , "봄 웜 라이트", "여름 쿨 라이트", "여름 쿨 뮤트", "가을 웜 뮤트", "가을 웜 딥", "겨울 쿨 딥", "겨울 쿨 브라이트"]
 
@@ -408,10 +408,45 @@ for file in os.listdir(input_path):
         pool2 = Pool(df2)
         
         c1 = model_tone.predict(pool)
-        c2 = model_weather.predict(pool)
+        #c2 = model_weather.predict(pool)
         
         cat_tone = c1[0]
-        cat_weather = c2[0][0]
+        #cat_weather = c2[0][0]
+        """
+        if cat_weather == 'spring':
+            model_mood = CatBoostClassifier()
+            model_mood.load_model('./model/model_spring_mood.cbm')
+            cat_mood = model_mood.predict(pool2)
+        elif cat_weather == 'summer':
+            model_mood = CatBoostClassifier()
+            model_mood.load_model('./model/model_summer_mood.cbm')
+            cat_mood = model_mood.predict(pool2)
+        elif cat_weather == 'fall':
+            model_mood = CatBoostClassifier()
+            model_mood.load_model('./model/model_fall_mood.cbm')
+            cat_mood = model_mood.predict(pool2)
+        else:
+            model_mood = CatBoostClassifier()
+            model_mood.load_model('./model/model_winter_mood.cbm')
+            cat_mood = model_mood.predict(pool2)
+        """
+        
+            
+        ct = ''
+        cw = ''
+        cm = ''
+        
+        if cat_tone == 'warm':
+            ct = '웜'
+            model_weather = CatBoostClassifier()
+            model_weather.load_model('./model/model_warm.cbm')
+            cat_weather = model_weather.predict(pool)
+            
+        elif cat_tone == 'cool':
+            ct = '쿨'
+            model_weather = CatBoostClassifier()
+            model_weather.load_model('./model/model_cool.cbm')
+            cat_weather = model_weather.predict(pool)
         
         if cat_weather == 'spring':
             model_mood = CatBoostClassifier()
@@ -429,17 +464,6 @@ for file in os.listdir(input_path):
             model_mood = CatBoostClassifier()
             model_mood.load_model('./model/model_winter_mood.cbm')
             cat_mood = model_mood.predict(pool2)
-        
-        
-            
-        ct = ''
-        cw = ''
-        cm = ''
-        
-        if cat_tone == 'warm':
-            ct = '웜'
-        elif cat_tone == 'cool':
-            ct = '쿨'
         
         if cat_weather == 'spring':
             cw = '봄'
