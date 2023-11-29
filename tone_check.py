@@ -21,11 +21,13 @@ model_tone.load_model('./model/model_tone2.cbm')
 gt_list = ['spring_warm_bright' , 'spring_warm_light', 'autumn_warm_mute', 'autumn_warm_deep',
            'summer_cool_mute', 'summer_cool_light', 'winter_cool_bright', 'winter_cool_deep']
 
+
+# 모델 정확도를 측정하기 위해 gt 값을 설정합니다.
 gt = gt_list[6]
 
 
-#input_path = './result/' + gt  + "12"
-#input_path = './result/warm2'
+# 테스트에 사용할 입력들(어떤 톤인지 결정된 이미지들)을 결정합니다.
+
 name = 'winter_result_w'
 input_path = './result/forehead/' + name
 tone_list = ["봄 웜 브라이트" , "봄 웜 라이트", "여름 쿨 라이트", "여름 쿨 뮤트", "가을 웜 뮤트", "가을 웜 딥", "겨울 쿨 딥", "겨울 쿨 브라이트"]
@@ -492,6 +494,8 @@ for file in os.listdir(input_path):
         if cm in goal:
             cat_mood_correct += 1
             
+            
+        # gt 값과 일치한 이미지들로 모델을 학습시키기 위해 일치하지 않은 이미지들은 삭제합니다.
         """
         if ct not in goal:
             try:
@@ -532,6 +536,7 @@ for file in os.listdir(input_path):
             os.remove(chin_dir + "/" + file)
             continue
         """
+        
 #file_count = len(glob.glob(input_path + '/*'))
 file_count = len(b_list_chin)
 print("-----------------------------")
@@ -606,6 +611,8 @@ print((count / file_count ) * 100)
 
 print("-----------------------------")
 
+
+# 선별된 데이터들로 학습을 시키기 위해 csv 파일을 작성합니다.
 """
 data = {'tone': ['1'] * file_count,'weather': ['winter'] * file_count ,\
         'b': b_list, 'b_chin': b_list_chin, 'b_cheek' : b_list_cheek, \
